@@ -127,6 +127,10 @@ def Output_RegionMask(Region, RegionMask, FilePath='../src/RegionMask/'):
 
 if (__name__ == '__main__'):
 
+	"""
+	When this file is called, calculate the regional masks over IO and WP regions and write to new nc files.
+	"""
+
 	RefInfo = tool_CP.Get_RefInfo()
 
 	RegionMask_IO = Create_RegionMask_IO(RefInfo['Lat'], RefInfo['Lon'], RefInfo['LandFraction'])

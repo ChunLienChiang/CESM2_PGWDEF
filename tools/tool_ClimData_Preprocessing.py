@@ -10,7 +10,7 @@ import json
 
 Config = json.load(open('../config.json'))
 
-def Connect_RefDataset(\
+def Get_RefData(\
 		RefDataset='CESM2_BHIST_Historical', \
 		FileName='b.e21.BHIST.f09_g17.CMIP6-historical.003.cam.h0.LANDFRAC.185001-201412.nc', \
 		Var=None, \
@@ -56,21 +56,21 @@ def Get_RefInfo():
 	"""
 
 	RefInfo = {\
-		'Lat': Connect_RefDataset(Var='lat'), \
-		'Lon': Connect_RefDataset(Var='lon'), \
-		'LandFraction': Connect_RefDataset(Var='LANDFRAC'), \
+		'Lat': Get_RefData(Var='lat'), \
+		'Lon': Get_RefData(Var='lon'), \
+		'LandFraction': Get_RefData(Var='LANDFRAC'), \
 	}
 	
 	return RefInfo
 
-def Get_LandMask(LandFraction, MaskType='Land'):
+def Get_LandMask(LandFraction=None, MaskType='Land'):
 	
 	"""
 	Get land mask from land fraction data.
 	==========================
 	Argument:
 
-		LandFraction (numpy array): the land fraction data
+		LandFraction (numpy array): the land fraction data. If there's no value provided, the land fraction in the reference dataset would be used
 
 		MaskType (str): 'Land' for land region (default); 'Ocean' for ocean region
 
@@ -79,7 +79,13 @@ def Get_LandMask(LandFraction, MaskType='Land'):
 		LandMask (numpy array): the mask of land (or ocean)
 	==========================
 	"""
+	
+	# Check if the argument LandFraction is empty
+	if (LandFraction is None):
 
+		LandFraction = Get_RefInfo()['LandFraction']
+
+	# Determine what tpye of mask should be return
 	if (MaskType == 'Land'):
 
 		LandMask = np.where(LandFraction>=0.5, True, False)
