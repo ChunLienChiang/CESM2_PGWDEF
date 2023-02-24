@@ -1,0 +1,6 @@
+{
+    "DataPath": {
+        "Main": "/work5/CESM2_PGWDEF/MainDataset/", 
+        "Ref_CESM2_BHIST_Historical": "/work5/CESM2_PGWDEF/RefDataset_CESM2_BHIST_Historical/"
+    }
+}
