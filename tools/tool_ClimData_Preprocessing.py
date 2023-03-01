@@ -11,8 +11,8 @@ import json
 Config = json.load(open('../config.json'))
 
 def Get_RefData(\
-		RefDataset='CESM2_BHIST_Historical', \
-		FileName='b.e21.BHIST.f09_g17.CMIP6-historical.003.cam.h0.LANDFRAC.185001-201412.nc', \
+		RefDataset='CESM2_FHIST_BGC_Historical', \
+		FileName='f.e21.FHIST_BGC.f09_f09.historical.ersstv5.goga.ens01.cam.h0.LANDFRAC.188001-201412.nc', \
 		Var=None, \
 	):
 	

@@ -10,7 +10,7 @@ import os
 import statsmodels.api as sm
 import tool_ClimData_Preprocessing as tool_CP
 
-def Create_WarmingFootprint(Data_TS, Data_Time=None):
+def Create_WarmingFootprint(Data_TS, Data_Time=None, Data_TimeRange=None):
 
 	"""
 	Create the warming footprint
@@ -31,7 +31,8 @@ def Create_WarmingFootprint(Data_TS, Data_Time=None):
 	if (np.ndim(Data_TS) != 3):
 
 		raise ValueError('The number of the argument Data_TS must be 3.')
-	
+
+	# Check whether the argument Data_Time is given
 	if (not Data_Time is None):
 
 		if (np.ndim(Data_Time) != 1):
@@ -45,6 +46,21 @@ def Create_WarmingFootprint(Data_TS, Data_Time=None):
 	else:
 
 		Data_Time = np.arange(Data_TS.shape[0])
+	
+	# Check whether the argument Data_TimeRange is correct
+	if (not Data_TimeRange is None):
+
+		if (not isinstance(Data_TimeRange, list)):
+
+			raise ValueError('The argument Data_TimeRange must be a list.')
+
+		if not (isinstance(Data_TimeRange[0], str) and isinstance(Data_TimeRange[1], str)):
+
+			raise ValueError('The items in the argument Data_TimeRange must be strings.')
+
+		# Crop data along time dimension
+		Data_TS   = Data_TS[(Data_Time>=int(Data_TimeRange[0]))&(Data_Time<=int(Data_TimeRange[1])), ...]
+		Data_Time = Data_Time[(Data_Time>=int(Data_TimeRange[0]))&(Data_Time<=int(Data_TimeRange[1])), ...]
 	
 	# Create new arrays to save regression coefficients and p-values
 	Footprint        = np.full(Data_TS.shape[1:], np.nan)
@@ -119,12 +135,23 @@ if (__name__ == '__main__'):
 	When this file is called, calculate the warming footprint and write to new nc files.
 	"""
 
-	# Get TS data from reference dataset (BHIST)
+	Data_TimeRange = [\
+		'19600101', \
+		'20141231', \
+	]
+
+	# Get TS data from reference dataset (FHIST)
 	Data_TS = tool_CP.Get_RefData(\
-		FileName='b.e21.BHIST.f09_g17.CMIP6-historical.003.cam.h0.TS.185001-201412.nc', \
+		FileName='f.e21.FHIST_BGC.f09_f09.historical.ersstv5.goga.ens01.cam.h0.TS.188001-201412.nc', \
 		Var='TS', \
+	)
+	Data_Date = tool_CP.Get_RefData(\
+		FileName='f.e21.FHIST_BGC.f09_f09.historical.ersstv5.goga.ens01.cam.h0.TS.188001-201412.nc', \
+		Var='date', \
 	)
 
 	# Calculate warming footprint
-	Footprint, Footprint_pvalue = Create_WarmingFootprint(Data_TS)
+	Footprint, Footprint_pvalue = Create_WarmingFootprint(Data_TS, Data_Date, Data_TimeRange)
+
+	# Output to nc file
 	Output_WarmingFootprint(Footprint, Footprint_pvalue)
