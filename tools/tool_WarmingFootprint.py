@@ -1,7 +1,7 @@
 """
 tool_WarmingFootprint.py
 ==========================
-Calculate and output the warming footprint for TS over the ocean region.
+Calculate and output the warming footprint for TS.
 """
 
 import numpy as np

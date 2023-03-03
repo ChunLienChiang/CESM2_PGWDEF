@@ -63,6 +63,67 @@ def Get_RefInfo():
 	
 	return RefInfo
 
+def Get_RangeBoundary(Range):
+
+	"""
+	Get the range boundary
+	==========================
+	Argument:
+
+		Range (str): the range to get boundary
+
+	Output:
+
+		RangeBoundary (tuple): (minimum latitude, maximum latitude, minimum longitude, maximum longitude), respectively
+	==========================
+	"""
+
+	if (Range == 'MC_Analysis'):
+		
+		return -10, 10, 90, 140
+	
+	elif (Range == 'Borneo'):
+
+		return -5, 8, 108, 120
+
+	else:
+		
+		return None
+
+def Get_RangeMask(Range, Lat=None, Lon=None):
+
+	"""
+	Get the range mask
+	==========================
+	Argument:
+
+		Range (str): the range to generate range mask
+
+		Lat (numpy array): latitude. If there's no value provided, the latitude in the reference dataset would be used
+
+		Lon (numpy array): longitude. If there's no value provided, the longitude in the reference dataset would be used
+	
+	Output:
+
+		RangeMask (numpy array): range mask
+	==========================
+	"""
+
+	# Check whether the arguments Lat and Lon are given
+	if ((Lat is None) or (Lon is None)):
+		
+		RefInfo = Get_RefInfo()
+		Lat     = RefInfo['Lat']
+		Lon     = RefInfo['Lon']
+	
+	# Get the range boundary
+	Lat_Min, Lat_Max, Lon_Min, Lon_Max = Get_RangeBoundary(Range)
+
+	# Create the range mask
+	RangeMask = np.where((Lat[:, None]>=Lat_Min)&(Lat[:, None]<=Lat_Max)&(Lon[None, :]>=Lon_Min)&(Lon[None, :]<=Lon_Max), True, False)
+
+	return RangeMask
+
 def Get_LandMask(LandFraction=None, MaskType='Land'):
 	
 	"""
