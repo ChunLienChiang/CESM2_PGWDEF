@@ -160,3 +160,46 @@ def Get_LandMask(LandFraction=None, MaskType='Land'):
 		raise ValueError('The argument MaskType must be Land or Ocean')
 
 	return LandMask
+
+def Calc_SeasonalCycle(Data, Time_Axis=0, Data_Frequency='Monthly'):
+
+	"""
+	Calculate the seasonal cycle of the data
+	==========================
+	Argument:
+
+		Data (numpy array)
+
+		Time_Axis (int): optional. The axis number of time dimension. Default is 0 (the first dimension)
+
+		Data_Frequency (str): optional: 'Monthly' or 'Daily'. The frequency of time dimension of the data
+	
+	Output:
+
+		SeasonalCycle (numpy array)
+	==========================
+	"""
+
+	# Check whether the dimensions are correct
+	if (not isinstance(Time_Axis, int)):
+
+		raise ValueError('The argument Time_Axis must not integer.')
+	
+	# Set the period of the seasonal cycle
+	if (Data_Frequency == 'Monthly'):
+
+		Time_Period = 12
+
+	if (Data_Frequency == 'Daily'):
+
+		Time_Period = 365
+	
+	# Check whether the time dimension is a multiple of 12 (or 365) if Data_Frequency is monthly (or daily)
+	if (Data.shape[Time_Axis] % Time_Period != 0) & (Data_Frequency == 'Monthly'):
+
+		raise ValueError('If the argument Data_Frequency is monthly, the time dimension of Data must be a multiple of 12. If the argument Data_Frequency is daily, the time dimension of Data must be a multiple of 365.')
+
+	# Calculate seasonal cycle
+	SeasonalCycle = np.nanmean(Data.reshape(tuple([*Data.shape[:Time_Axis], Data.shape[Time_Axis]//Time_Period, Time_Period, *Data.shape[Time_Axis+1:]])), axis=Time_Axis)
+
+	return SeasonalCycle
