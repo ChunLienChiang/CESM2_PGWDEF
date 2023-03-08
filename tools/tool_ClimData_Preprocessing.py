@@ -39,7 +39,7 @@ def Get_RefData(\
 		raise ValueError('The argument Var must not be empty.')
 
 	# Connect to nc file
-	FilePath = str(Config['DataPath']['Ref_{RefDataset}'.format(RefDataset=RefDataset)]) + '/{FileName}'.format(FileName=FileName)
+	FilePath = str(Config['Data_Path']['Ref_{RefDataset}'.format(RefDataset=RefDataset)]) + '/{FileName}'.format(FileName=FileName)
 	Data = nc.Dataset(FilePath).variables[Var][:].squeeze().filled(np.nan)
 
 	return Data
@@ -161,6 +161,78 @@ def Get_LandMask(LandFraction=None, MaskType='Land'):
 
 	return LandMask
 
+def Calc_SpatialAverage(\
+		Data, \
+		Spatial_Axis=(-2, -1), \
+		LatWeighted=True, \
+		LandMask=None, \
+		RangeMask=None, \
+	):
+
+	"""
+	Calculate the spatial average of the data
+	==========================
+	Argument:
+
+		Data (numpy array)
+
+		Spatial_Axis (tuple of int): optional. The axis numbers of spatial (latitude and longtitude) dimension. Default is (-2, -1) (the last two dimensions)
+
+		LatWeighted (boolean): Default is True. If the argument is True, the spatial average would be calculated considering latitude weighted
+
+		LandMask (str): Default is None. If the argument is given, the land mask would be used to filter data
+
+		RangeMask (str): Default is None. If the argument is given, the range mask would be used to filter data
+
+	Output:
+
+		SpatialAverage (numpy array)
+	==========================
+	"""
+
+	# Check whether the dimensions are correct
+	if not (isinstance(Spatial_Axis, tuple)):
+
+		raise ValueError('The argument Spatial_Axis must be a tuple.')
+	
+	if (len(Spatial_Axis) != 2):
+
+		raise ValueError('The length of the argument Spatial_Axis must be 2.')
+
+	# Create latitude weights
+	Weight_Lat = np.cos(np.deg2rad(Get_RefInfo()['Lat']))[:, None]
+	
+	# Create land mask weights
+	if (LandMask is None):
+		
+		Weight_LandMask = np.full((Data.shape[Spatial_Axis[0]], Data.shape[Spatial_Axis[1]]), 1)
+
+	else:
+
+		Weight_LandMask = np.where(Get_LandMask(MaskType=LandMask), 1, 0)
+	
+	# Create range mask weights
+	if (RangeMask is None):
+		
+		Weight_RangeMask = np.full((Data.shape[Spatial_Axis[0]], Data.shape[Spatial_Axis[1]]), 1)
+
+	else:
+
+		Weight_RangeMask = np.where(Get_RangeMask(RangeMask), 1, 0)
+	
+	# Calculate spatial average
+	if (LatWeighted):
+
+		Weights = np.broadcast_to((Weight_Lat*Weight_LandMask*Weight_RangeMask)[None, :], Data.shape)
+	
+	else:
+
+		Weights = np.broadcast_to((Weight_LandMask*Weight_RangeMask)[None, :], Data.shape)
+	
+	SpatialAverage = np.ma.average(np.ma.MaskedArray(Data, mask=np.isnan(Data)), axis=Spatial_Axis, weights=Weights)
+		
+	return SpatialAverage
+
 def Calc_SeasonalCycle(Data, Time_Axis=0, Data_Frequency='Monthly'):
 
 	"""
@@ -172,7 +244,7 @@ def Calc_SeasonalCycle(Data, Time_Axis=0, Data_Frequency='Monthly'):
 
 		Time_Axis (int): optional. The axis number of time dimension. Default is 0 (the first dimension)
 
-		Data_Frequency (str): optional: 'Monthly' or 'Daily'. The frequency of time dimension of the data
+		Data_Frequency (str): optional. 'Monthly' or 'Daily'. The frequency of time dimension of the data
 	
 	Output:
 
@@ -197,7 +269,12 @@ def Calc_SeasonalCycle(Data, Time_Axis=0, Data_Frequency='Monthly'):
 	# Check whether the time dimension is a multiple of 12 (or 365) if Data_Frequency is monthly (or daily)
 	if (Data.shape[Time_Axis] % Time_Period != 0) & (Data_Frequency == 'Monthly'):
 
-		raise ValueError('If the argument Data_Frequency is monthly, the time dimension of Data must be a multiple of 12. If the argument Data_Frequency is daily, the time dimension of Data must be a multiple of 365.')
+		raise ValueError(\
+			'If the argument Data_Frequency is monthly, '\
+			'the time dimension of Data must be a multiple of 12. '\
+			'If the argument Data_Frequency is daily, '\
+			'the time dimension of Data must be a multiple of 365.'\
+		)
 
 	# Calculate seasonal cycle
 	SeasonalCycle = np.nanmean(Data.reshape(tuple([*Data.shape[:Time_Axis], Data.shape[Time_Axis]//Time_Period, Time_Period, *Data.shape[Time_Axis+1:]])), axis=Time_Axis)

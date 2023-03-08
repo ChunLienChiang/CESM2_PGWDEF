@@ -1,4 +1,5 @@
 __pycache__/
 src/
+Output_Figure/
 *.pyc
 FileTransfer_T3toForest_Output.sh

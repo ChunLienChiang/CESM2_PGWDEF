@@ -154,7 +154,7 @@ if (__name__ == '__main__'):
 	"""
 
 	# The file name of flanduse and fsurdat
-	CESM_Inputdata_Path = Config['DataPath']['CESM_Inputdata']
+	CESM_Inputdata_Path = Config['Data_Path']['CESM_Inputdata']
 	FileName_flanduse   = CESM_Inputdata_Path + 'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr1850-2100_c190214.nc'
 	FileName_fsurdat    = CESM_Inputdata_Path + 'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr1850_c190214.nc'
 
