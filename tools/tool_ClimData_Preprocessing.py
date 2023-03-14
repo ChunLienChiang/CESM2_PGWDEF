@@ -124,11 +124,19 @@ def Get_RangeMask(Range, Lat=None, Lon=None):
 		Lat     = RefInfo['Lat']
 		Lon     = RefInfo['Lon']
 	
-	# Get the range boundary
-	Lat_Min, Lat_Max, Lon_Min, Lon_Max = Get_RangeBoundary(Range)
+	# Check whether the argument Range is SST range
+	if (Range in ['IO_Analysis', 'WP_Analysis', 'IOWP_Analysis']):
+		
+		RangeMask = nc.Dataset('../src/SSTRangeMask_{Range}.nc'.format(Range=Range.split('_')[0])).variables['SSTRangeMask'][:]
+		RangeMask = np.where(RangeMask==1, True, False)
+		
+	else:
 
-	# Create the range mask
-	RangeMask = np.where((Lat[:, None]>=Lat_Min)&(Lat[:, None]<=Lat_Max)&(Lon[None, :]>=Lon_Min)&(Lon[None, :]<=Lon_Max), True, False)
+		# Get the range boundary
+		Lat_Min, Lat_Max, Lon_Min, Lon_Max = Get_RangeBoundary(Range)
+
+		# Create the range mask
+		RangeMask = np.where((Lat[:, None]>=Lat_Min)&(Lat[:, None]<=Lat_Max)&(Lon[None, :]>=Lon_Min)&(Lon[None, :]<=Lon_Max), True, False)
 
 	return RangeMask
 
