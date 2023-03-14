@@ -82,13 +82,21 @@ def Get_RangeBoundary(Range):
 		
 		return -10, 10, 90, 140
 	
-	elif (Range == 'Borneo'):
+	elif (Range == 'Borneo_Analysis'):
 
 		return -5, 8, 108, 120
 
+	elif (Range == 'NH_Analysis'):
+
+		return 0, 90, 0, 360
+
+	elif (Range == 'SH_Analysis'):
+
+		return -90, 0, 0, 360
+
 	else:
 		
-		return None
+		raise ValueError('The argument Range is not available.')
 
 def Get_RangeMask(Range, Lat=None, Lon=None):
 
@@ -280,3 +288,51 @@ def Calc_SeasonalCycle(Data, Time_Axis=0, Data_Frequency='Monthly'):
 	SeasonalCycle = np.nanmean(Data.reshape(tuple([*Data.shape[:Time_Axis], Data.shape[Time_Axis]//Time_Period, Time_Period, *Data.shape[Time_Axis+1:]])), axis=Time_Axis)
 
 	return SeasonalCycle
+
+def Calc_AnnualMean(Data, Time_Axis=0, Data_Frequency='Monthly'):
+
+	"""
+	Calculate the annual mean of the data
+	==========================
+	Argument:
+
+		Data (numpy array)
+
+		Time_Axis (int): optional. The axis number of time dimension. Default is 0 (the first dimension)
+
+		Data_Frequency (str): optional. 'Monthly' or 'Daily'. The frequency of time dimension of the data
+	
+	Output:
+
+		AnnualMean (numpy array)
+	==========================
+	"""
+
+	# Check whether the dimensions are correct
+	if (not isinstance(Time_Axis, int)):
+
+		raise ValueError('The argument Time_Axis must not integer.')
+	
+	# Set the period of the annual mean
+	if (Data_Frequency == 'Monthly'):
+
+		Time_Period = 12
+
+	if (Data_Frequency == 'Daily'):
+
+		Time_Period = 365
+	
+	# Check whether the time dimension is a multiple of 12 (or 365) if Data_Frequency is monthly (or daily)
+	if (Data.shape[Time_Axis] % Time_Period != 0) & (Data_Frequency == 'Monthly'):
+
+		raise ValueError(\
+			'If the argument Data_Frequency is monthly, '\
+			'the time dimension of Data must be a multiple of 12. '\
+			'If the argument Data_Frequency is daily, '\
+			'the time dimension of Data must be a multiple of 365.'\
+		)
+
+	# Calculate annual mean
+	AnnualMean = np.nanmean(Data.reshape(tuple([*Data.shape[:Time_Axis], Data.shape[Time_Axis]//Time_Period, Time_Period, *Data.shape[Time_Axis+1:]])), axis=Time_Axis+1)
+
+	return AnnualMean

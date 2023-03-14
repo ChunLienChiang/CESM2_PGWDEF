@@ -28,7 +28,7 @@
         "PGWWP_LUC": [0]
     },
     "Data_TimeRange":{
-        "CTL"      : [1, 3],
+        "CTL"      : [1, 9],
         "PGWIO"    : [1, 10],
         "PGWWP"    : [1, 10],
         "CTL_LUC"  : [1, 10],

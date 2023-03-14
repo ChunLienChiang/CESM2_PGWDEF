@@ -14,5 +14,3 @@ if (__name__ == '__main__'):
 	"""
 	When this file is called, create the SST forcing files.
 	"""
-	
-    
