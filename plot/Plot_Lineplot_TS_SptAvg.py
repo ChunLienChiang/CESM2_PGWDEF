@@ -15,25 +15,26 @@ from tools import tool_ClimData_Preprocessing as tool_CDPrep
 
 def Plot_Lineplot(Plot_Data, Plot_Config):
 
-    Figure_Path = '../output/Output_Figure/Plot_Lineplot_TS_SpaAvg/'
-    Figure_Name = 'Plot_Lineplot_TS_SpaAvg.png'
+    Figure_Path = '../output/Output_Figure/Plot_Lineplot_TS_SptAvg/'
+    Figure_Name = 'Plot_Lineplot_TS_SptAvg.png'
 
     # Create figure object
     fig, ax = plt.subplots(figsize=(5, 5), dpi=150)
 
     # Plot
     x_array = np.arange(Plot_Data['TS_Global_SptAvg'].size) + 1
-    ax.plot(x_array, Plot_Data['TS_Global_SptAvg'], color='Black')
-    ax.plot(x_array, Plot_Data['TS_NHL_SptAvg'], color='Red')
-    ax.plot(x_array, Plot_Data['TS_SHL_SptAvg'], color='Blue')
-    ax.plot(x_array, Plot_Data['TS_NHO_SptAvg'], color='Red', linestyle='dashed')
-    ax.plot(x_array, Plot_Data['TS_SHO_SptAvg'], color='Blue', linestyle='dashed')
+    ax.plot(x_array, Plot_Data['TS_Global_SptAvg'], color='Black', label='Global')
+    ax.plot(x_array, Plot_Data['TS_NHL_SptAvg'], color='Red', label='NH land')
+    ax.plot(x_array, Plot_Data['TS_SHL_SptAvg'], color='Blue', label='SH land')
+    ax.plot(x_array, Plot_Data['TS_NHO_SptAvg'], color='Red', linestyle='dashed', label='NH ocean')
+    ax.plot(x_array, Plot_Data['TS_SHO_SptAvg'], color='Blue', linestyle='dashed', label='SH ocean')
 
     # Configuration
     ax.set_xlabel('Year')
     ax.set_ylabel('TS (K)')
     ax.set_title('Lineplot: TS spatial average', pad=12)
     ax.text(0.99, 0, dt.datetime.today().strftime('%Y/%m/%d %H:%M'), ha='right', va='bottom', fontsize=7, transform=ax.transAxes)
+    ax.legend(loc='upper right')
 
     # Save figure
     if not (os.path.exists(Figure_Path)): os.makedirs(Figure_Path)
