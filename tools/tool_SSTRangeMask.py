@@ -130,9 +130,6 @@ def Output_SSTRangeMask(Range, SSTRangeMask, FilePath='../src/SSTRangeMask/'):
 
 def Plot_SSTRangeMask(Plot_Data, Plot_Config):
 
-	Figure_Path = '../output/Output_Figure/src_Map_SSTRegionMask/'
-	Figure_Name = 'src_Map_SSTRegionMask_{Range}.png'.format(Range=Plot_Config['Plot_Range'])
-
 	# Create figure object
 	fig, ax = plt.subplots(figsize=(5, 3), dpi=300, subplot_kw={'projection': ccrs.PlateCarree()})
 
@@ -152,6 +149,8 @@ def Plot_SSTRangeMask(Plot_Data, Plot_Config):
 	ax.coastlines(resolution='110m')
 
 	# Save figure
+	Figure_Path = '../output/Output_Figure/Plot.Map.SSTRegionMask/'
+	Figure_Name = 'Plot.Map.SSTRegionMask.{Range}.png'.format(Range=Plot_Config['Plot_Range'])
 	if not (os.path.exists(Figure_Path)): os.makedirs(Figure_Path)
 	plt.savefig(Figure_Path + Figure_Name)
 

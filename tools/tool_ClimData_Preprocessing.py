@@ -181,7 +181,7 @@ def Calc_SpatialAverage(\
 		Data, \
 		Spatial_Axis=(-2, -1), \
 		LatWeighted=True, \
-		LandMask=None, \
+		LandMask='Land', \
 		RangeMask=None, \
 	):
 
