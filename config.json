@@ -1,38 +1,32 @@
 {
-    "Data_Name": {
-        "Main": [
-            "CTL",     
-            "PGWIO",    
-            "PGWWP",  
-            "CTL_LUC",
-            "PGWIO_LUC",
-            "PGWWP_LUC"
-        ], 
-        "Ref": [
-            "Ref_CESM2_BHIST_Historical",
-            "Ref_CESM2_FHIST_BGC_Historical"
-        ]
-    },
-    "Data_Path": {
-        "Main": "/work5/CESM2_PGWDEF/MainDataset/", 
-        "Ref_CESM2_BHIST_Historical": "/work5/CESM2_PGWDEF/RefDataset_CESM2_BHIST_Historical/",
-        "Ref_CESM2_FHIST_BGC_Historical": "/work5/CESM2_PGWDEF/RefDataset_CESM2_FHIST_BGC_Historical/",
-        "CESM_Inputdata": "/work/cesm/inputdata/"
-    },
-    "Data_En":{
-        "CTL"      : [0],
-        "PGWIO"    : [0],
-        "PGWWP"    : [0],
-        "CTL_LUC"  : [0],
-        "PGWIO_LUC": [0],
-        "PGWWP_LUC": [0]
-    },
-    "Data_TimeRange":{
-        "CTL"      : [1, 9],
-        "PGWIO"    : [1, 10],
-        "PGWWP"    : [1, 10],
-        "CTL_LUC"  : [1, 10],
-        "PGWIO_LUC": [1, 10],
-        "PGWWP_LUC": [1, 10]
-    }
+	"Data_Name": {
+		"Main": [
+			"CTL",
+			"EXP_fixLUC",
+			"EXP_fixSST",
+			"EXP_fixSSTLUC"
+		], 
+		"SST_Pacemaker": {
+			"CTL"       : "ModifiedSST_ERSST_gx1v7", 
+			"fixSST"    : "ModifiedSST_ERSST_gx1v7_Detrend"
+		}
+	},
+	"Data_Path": {
+		"Main"          : "/work5/CESM2_PGWDEF/MainDataset/", 
+		"SST_Pacemaker" : "/work5/CESM2_PGWDEF/SST_Pacemaker/", 
+		"Ref"           : "/work5/CESM2_PGWDEF/Ref/", 
+		"CESM_Inputdata": "/work/cesm/inputdata/"
+	},
+	"Data_En":{
+		"CTL"           : [0],
+		"EXP_fixLUC"    : [0],
+		"EXP_fixSST"    : [0],
+		"EXP_fixSSTLUC" : [0]
+	},
+	"Data_TimeRange":{
+		"CTL"           : [1, 10],
+		"EXP_fixLUC"    : [1, 10],
+		"EXP_fixSST"    : [1, 10],
+		"EXP_fixSSTLUC" : [1, 10]
+	}
 }

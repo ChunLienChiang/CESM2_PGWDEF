@@ -11,8 +11,7 @@ import json
 Config = json.load(open('../config.json'))
 
 def Get_RefData(\
-		RefDataset='CESM2_FHIST_BGC_Historical', \
-		FileName='f.e21.FHIST_BGC.f09_f09.historical.ersstv5.goga.ens01.cam.h0.LANDFRAC.188001-201412.nc', \
+		FileName='b.e21.BHISTcmip6.f09_g17.LE2-1001.001.cam.h0.LANDFRAC.185001-185912.nc', \
 		Var=None, \
 	):
 	
@@ -21,8 +20,6 @@ def Get_RefData(\
 	==========================
 	Argument:
 
-		RefDataset (str): the name of the reference dataset
-		
 		FileName (str): the file name of the connected reference dataset
 		
 		Var (str): the variable to be read
@@ -34,13 +31,13 @@ def Get_RefData(\
 	"""
 
 	# Check whether argument Var is empty
-	if (Var is None):
-
-		raise ValueError('The argument Var must not be empty.')
+	if (Var is None): raise ValueError('The argument Var must not be empty.')
 
 	# Connect to nc file
-	FilePath = str(Config['Data_Path']['Ref_{RefDataset}'.format(RefDataset=RefDataset)]) + '/{FileName}'.format(FileName=FileName)
+	FilePath = str(Config['Data_Path']['Ref']) + '/{FileName}'.format(FileName=FileName)
 	Data = nc.Dataset(FilePath).variables[Var][:].squeeze().filled(np.nan)
+
+	if (np.ndim(Data) == 3): Data = Data[0, ...]
 
 	return Data
 
@@ -82,6 +79,10 @@ def Get_RangeBoundary(Range):
 		
 		return -10, 10, 90, 140
 	
+	elif (Range == 'MC_Map'):
+
+		return -15, 15, 85, 145
+
 	elif (Range == 'Borneo_Analysis'):
 
 		return -5, 8, 108, 120
@@ -127,7 +128,7 @@ def Get_RangeMask(Range, Lat=None, Lon=None):
 	# Check whether the argument Range is SST range
 	if (Range in ['IO_Analysis', 'WP_Analysis', 'IOWP_Analysis']):
 		
-		RangeMask = nc.Dataset('../src/SSTRangeMask_{Range}.nc'.format(Range=Range.split('_')[0])).variables['SSTRangeMask'][:]
+		RangeMask = nc.Dataset('../src/SSTRangeMask/SSTRangeMask_{Range}.nc'.format(Range=Range.split('_')[0])).variables['SSTRangeMask'][:]
 		RangeMask = np.where(RangeMask==1, True, False)
 		
 	else:
@@ -238,7 +239,7 @@ def Calc_SpatialAverage(\
 	
 	# Calculate spatial average
 	if (LatWeighted):
-
+		
 		Weights = np.broadcast_to((Weight_Lat*Weight_LandMask*Weight_RangeMask)[None, :], Data.shape)
 	
 	else:

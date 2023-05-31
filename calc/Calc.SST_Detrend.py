@@ -1,16 +1,21 @@
 """
 Calc.SST_Detrend.py
 ===============================
-Remove the linear trend of SST between 1960-2020 and save the detrended SST as a new dataset.
+1. Remove the linear trend of SST between 1960-2020 and save the detrended SST as a new dataset.
+2. Plot the line chart of SST and detrended SST.
+3. Output the detrended SST as a new dataset (under the new directory).
+4. Output the regrided detrended/original SST as a new nc file (under the new directory).
 """
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import xarray as xr
-import pop_tools as popt
+import json
 import os
 import datetime as dt
+
+Config = json.load(open('../config.json'))
 
 def Get_Data():
 
@@ -25,10 +30,10 @@ def Get_Data():
 	print('Get ModifiedSST_ERSST_gx1v7 data')
 
 	# Path of ModifiedSST_ERSST_gx1v7 data
-	Data_Path = '/work/home/b07209001/CESM_Simulation/CESM2_PGWDEF/src/SST/ModifiedSST_ERSST_gx1v7/'
+	Data_Path = Config['Data_Path']['SST_Pacemaker'] + Config['Data_Name']['SST_Pacemaker']['CTL'] + '/'
 
-	# Read all nc files under the path
-	File_List = os.listdir(Data_Path)
+	# Read all nc files that ends with number under the path
+	File_List = [i for i in os.listdir(Data_Path) if i.split('.')[-1].isnumeric()]
 	File_List.sort()
 
 	# Create new lists to store data
@@ -56,6 +61,10 @@ def Get_Data():
 
 	# Add OriginTime as a new variable "filename"
 	Data['filename'] = (['time'],  Data_OriginTime)
+
+	# Output concatenated data to new nc file
+	if (os.path.exists(Data_Path + 'ModifiedSST_ERSST_gx1v7.nc.All')): os.remove(Data_Path + 'ModifiedSST_ERSST_gx1v7.nc.All')
+	Data.to_netcdf(Data_Path + 'ModifiedSST_ERSST_gx1v7.nc.All')
 
 	return Data
 
@@ -154,6 +163,14 @@ def Output_Data(Data, File_List):
 			dims=['nlat', 'nlon'],
 		).to_dataset(name='SST').to_netcdf(Output_Path + File_List[ind_File])
 	
+	# Output concatenated data to new nc file
+	if (os.path.exists(Output_Path + 'ModifiedSST_ERSST_gx1v7.nc.All')): os.remove(Output_Path + 'ModifiedSST_ERSST_gx1v7.nc.All')
+	xr.DataArray(
+		data=Data['SST'].values,
+		dims=['time', 'nlat', 'nlon'],
+		coords={'time': Data['time'].values},
+	).to_dataset(name='SST').to_netcdf(Output_Path + 'ModifiedSST_ERSST_gx1v7.nc.All')
+
 	return
 
 if (__name__ == '__main__'):
