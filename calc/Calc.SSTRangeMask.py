@@ -1,26 +1,32 @@
 """
-tool_SSTRangeMask.py
+Calc.SSTRangeMask.py
 ==========================
 Calculate and output the range mask that can be used in pacemaker simulation.
 """
 
 import numpy as np
-import netCDF4 as nc
+import xarray as xr
+import scipy.interpolate as sciinterp
+import skimage.filters as skifilters
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import cartopy.crs as ccrs
+import pop_tools as popt
 import os
-import tool_ClimData_Preprocessing as tool_CP
+import sys
+sys.path.append('../')
+import tools.tool_GetClimData as tool_GetCD
+import tools.tool_ClimData_Preprocessing as tool_CP
 
 def Create_SSTRangeMask_IO(Lat, Lon, LandFraction):
 
 	"""
 	Create the range mask for Indian Ocean (IO) region
 	==========================
-	Argument:
-		
+	Input:
+
 		Lat (numpy array): latitude
-		
+
 		Lon (numpy array): longitude
 
 		LandFraction (numpy array): land fraction
@@ -54,7 +60,7 @@ def Create_SSTRangeMask_WP(Lat, Lon, LandFraction):
 	"""
 	Create the range mask for Western Pacific (WP) region
 	==========================
-	Argument:
+	Input:
 		
 		Lat (numpy array): latitude
 		
@@ -88,18 +94,24 @@ def Create_SSTRangeMask_WP(Lat, Lon, LandFraction):
 	
 	return SSTRangeMask
 
-def Output_SSTRangeMask(Range, SSTRangeMask, FilePath='../src/SSTRangeMask/'):
+def Calc_Data_Smoothing(Data, Gaussian_sigma=1):
+
+	Data = skifilters.gaussian(Data, sigma=Gaussian_sigma, mode='wrap', preserve_range=True)
+
+	return Data
+
+def Output_SSTRangeMask(Range, SSTRangeMask, File_Path='../src/SSTRangeMask/', Bool_Output_POP=True):
 
 	"""
-	Output the range mask
+	Output the range mask.
 	==========================
-	Argument:
-		
+	Input:
+
 		Range (str): the name of the range. This would be contained in the output file name
-		
+
 		SSTRangeMask (numpy array): range mask
 
-		FilePath (str): the path for the file to be output
+		File_Path (str): optional. The path for the file to be output
 
 	Output:
 
@@ -107,24 +119,57 @@ def Output_SSTRangeMask(Range, SSTRangeMask, FilePath='../src/SSTRangeMask/'):
 	==========================
 	"""
 
+	# Set output grid: 0.9x1.25
+	LatLon_Grid     = tool_GetCD.Get_Grid('0.9x1.25', Bool_Meshgrid=False)
+	LatLon_Grid_Lat = LatLon_Grid['Lat']
+	LatLon_Grid_Lon = LatLon_Grid['Lon']
+
 	# Check whether the file path has existed
-	if (not os.path.exists(FilePath)): os.makedirs(FilePath)
+	if (not os.path.exists(File_Path)): os.makedirs(File_Path)
 
 	# Write to nc file
-	# Create new file
-	ncFile       = nc.Dataset('{FilePath}/SSTRangeMask_{Range}.nc'.format(FilePath=FilePath, Range=Range), mode='w', format='NETCDF4')
-	ncFile.title = 'Range Mask: {Range}'.format(Range=Range)
-	
-	# Create new dimensions
-	Dim_Lat = ncFile.createDimension('Lat', SSTRangeMask.shape[0])
-	Dim_Lon = ncFile.createDimension('Lon', SSTRangeMask.shape[1])
+	xr.Dataset( \
+		data_vars={\
+			'SSTRangeMask': xr.DataArray(data=SSTRangeMask, dims=['Lat', 'Lon'], attrs={'description': 'range mask (1=True, 0=False)'}), \
+		}, \
+		coords={\
+			'Lat': LatLon_Grid_Lat, \
+			'Lon': LatLon_Grid_Lon, \
+		}, \
+		attrs={\
+			'title': 'Range Mask: {Range}'.format(Range=Range), \
+		} \
+	).to_netcdf('{File_Path}/SSTRangeMask_{Range}.nc'.format(File_Path=File_Path, Range=Range))
 
-	# Create new variables
-	Var_SSTRangeMask = ncFile.createVariable('SSTRangeMask', np.float32, ('Lat', 'Lon'))
-	Var_SSTRangeMask.long_name = 'range mask (1=True, 0=False)'
-	Var_SSTRangeMask[:] = SSTRangeMask
+	# Output to POP
+	if (Bool_Output_POP):
 
-	ncFile.close()
+		# Get pop grid
+		POP_Grid     = popt.get_grid('POP_gx1v7')
+		POP_Grid_Lat = POP_Grid.TLAT.values
+		POP_Grid_Lon = POP_Grid.TLONG.values
+
+		# Get 0.9x1.25 grid
+		LatLon_Grid = tool_GetCD.Get_Grid('0.9x1.25')
+		LatLon_Grid_Lat = LatLon_Grid['Lat']
+		LatLon_Grid_Lon = LatLon_Grid['Lon']
+
+		# Interpolation
+		Interp_Linear       = sciinterp.LinearNDInterpolator((LatLon_Grid_Lat.flatten(), LatLon_Grid_Lon.flatten()), SSTRangeMask.flatten())
+		Interp_Nearest      = sciinterp.NearestNDInterpolator((LatLon_Grid_Lat.flatten(), LatLon_Grid_Lon.flatten()), SSTRangeMask.flatten())
+		Data_Interp_Linear  = Interp_Linear(np.concatenate((POP_Grid_Lat.flatten()[:, None], POP_Grid_Lon.flatten()[:, None]), axis=1))
+		Data_Interp_Nearest = Interp_Nearest(np.concatenate((POP_Grid_Lat.flatten()[:, None], POP_Grid_Lon.flatten()[:, None]), axis=1))
+		SSTRangeMask_POP    = np.where(np.isnan(Data_Interp_Linear), Data_Interp_Nearest, Data_Interp_Linear).reshape(POP_Grid_Lat.shape)
+
+		# Write to nc file
+		xr.Dataset( \
+			data_vars={\
+				'SSTRangeMask': xr.DataArray(data=SSTRangeMask_POP, coords={'TLAT': (['y', 'x'], POP_Grid_Lat), 'TLONG': (['y', 'x'], POP_Grid_Lon)}, dims=['y', 'x']), \
+			}, \
+			attrs={\
+				'title': 'Range Mask: {Range}'.format(Range=Range), \
+			} \
+		).to_netcdf('{File_Path}/SSTRangeMask_{Range}.gx1v7.nc'.format(File_Path=File_Path, Range=Range))
 
 	return
 
@@ -167,11 +212,17 @@ if (__name__ == '__main__'):
 	# Calculate range mask for IO, WP
 	SSTRangeMask_IO = Create_SSTRangeMask_IO(RefInfo['Lat'], RefInfo['Lon'], RefInfo['LandFraction'])
 	SSTRangeMask_WP = Create_SSTRangeMask_WP(RefInfo['Lat'], RefInfo['Lon'], RefInfo['LandFraction'])
+	SSTRangeMask_IO = np.where(SSTRangeMask_IO, 1, 0)
+	SSTRangeMask_WP = np.where(SSTRangeMask_WP, 1, 0)
+
+	# Smooth the range mask
+	SSTRangeMask_IO = Calc_Data_Smoothing(SSTRangeMask_IO, 1.5)
+	SSTRangeMask_WP = Calc_Data_Smoothing(SSTRangeMask_WP, 1.5)
 
 	# Output to nc file
 	Output_SSTRangeMask('IO', SSTRangeMask_IO)
 	Output_SSTRangeMask('WP', SSTRangeMask_WP)
-	Output_SSTRangeMask('IOWP', SSTRangeMask_IO | SSTRangeMask_WP)
+	Output_SSTRangeMask('IOWP', np.maximum(SSTRangeMask_IO, SSTRangeMask_WP))
 
 	# Plot
 	Plot_SSTRangeMask(\
@@ -183,6 +234,6 @@ if (__name__ == '__main__'):
 		{'Plot_Range': 'WP'}, \
 	)
 	Plot_SSTRangeMask(\
-		{'SSTRangeMask': SSTRangeMask_IO | SSTRangeMask_WP, 'Lat': RefInfo['Lat'], 'Lon': RefInfo['Lon']}, \
+		{'SSTRangeMask': np.maximum(SSTRangeMask_IO, SSTRangeMask_WP), 'Lat': RefInfo['Lat'], 'Lon': RefInfo['Lon']}, \
 		{'Plot_Range': 'IOWP'}, \
 	)

@@ -6,7 +6,6 @@ Convert pop grid to 0.9x1.25 grid using scipy.interpolate.griddata
 
 import numpy as np
 import xarray as xr
-import datetime as dt
 import scipy.interpolate as sciinterp
 import multiprocessing as mp
 import json
